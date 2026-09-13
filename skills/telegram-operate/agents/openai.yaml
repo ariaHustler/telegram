@@ -1,8 +1,4 @@
-Exit code: 0
-Wall time: 0.8 seconds
-Output:
 interface:
   display_name: "Telegram Operations"
   short_description: "Operate Telegram conversations safely"
   default_prompt: "Use Telegram to inspect conversations, draft replies, and execute approved messaging actions."
-
