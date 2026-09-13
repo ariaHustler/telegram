@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.9 seconds
-Output:
 ---
 name: telegram-operate
 description: Operate Telegram conversations, groups, channels, files, and media through Telegram Web, Telegram Desktop, Bot API, or MTProto. Use when Codex must search or read Telegram, summarize conversations, draft or translate replies, send/edit/forward/delete messages, or upload/download Telegram media.
@@ -47,4 +44,3 @@ Verify local path, media type, file size, caption, destination, and upload compl
 Use `telegram_audit_list` for API/MCP operations. For browser and desktop operations, state the destination, operation, and visible completion evidence without recording message content unnecessarily.
 
 Read [references/transport-matrix.md](references/transport-matrix.md) when selecting among multiple valid transports.
-
