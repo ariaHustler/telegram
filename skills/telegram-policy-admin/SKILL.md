@@ -8,9 +8,10 @@ description: Configure and inspect Telegram plugin aliases, destinations, automa
 ## Initialize
 
 1. Call `telegram_status` to create and inspect the local database.
-2. Keep secrets in environment variables. Default names are `TELEGRAM_BOT_TOKEN`, `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE`.
+2. On Windows, store secrets with `python scripts/store_credential.py NAME`; input is hidden and saved in Windows Credential Manager. Environment variables remain a fallback. Default names are `TELEGRAM_BOT_TOKEN`, `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE`.
 3. Install the optional Telethon dependency only when MTProto is required: `python -m pip install -r scripts/requirements-optional.txt` from the plugin root.
 4. Keep `dry_run=true` through initial browser, Bot API, and MTProto rehearsals.
+5. Validate a BotFather token with `telegram_bot_identity`. After the user sends `/start` to the bot, use `telegram_bot_updates` with `include_text=false` to discover the private chat ID.
 
 ## Manage aliases
 
