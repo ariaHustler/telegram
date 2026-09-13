@@ -1,6 +1,6 @@
 {
   "name": "telegram",
-  "version": "0.1.0+codex.20260913173603",
+  "version": "0.1.0+codex.20260913182443",
   "description": "Multilingual Telegram operations, content automation, policy control, and local MCP tools.",
   "author": {
     "name": "Aria Hustler"
