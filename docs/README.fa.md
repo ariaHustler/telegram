@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.7 seconds
-Output:
 # افزونهٔ Telegram برای Codex
 
 این پروژه یک افزونهٔ محلی Codex برای مدیریت چندزبانهٔ Telegram، اتوماسیون
@@ -41,4 +38,3 @@ python -m pip install -r scripts/requirements-optional.txt
 
 این مخزن عمومی است، اما نرم‌افزار متن‌باز نیست. تمام حقوق محفوظ است و انتشار
 عمومی سورس به‌معنای اعطای مجوز استفاده، کپی، تغییر یا توزیع نیست.
-
