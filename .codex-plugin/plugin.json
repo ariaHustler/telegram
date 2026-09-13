@@ -1,0 +1,45 @@
+Exit code: 0
+Wall time: 1.1 seconds
+Output:
+{
+  "name": "telegram",
+  "version": "0.1.0+codex.20260913173603",
+  "description": "Multilingual Telegram operations, content automation, policy control, and local MCP tools.",
+  "author": {
+    "name": "Aria Hustler"
+  },
+  "license": "Proprietary",
+  "keywords": [
+    "telegram",
+    "automation",
+    "content",
+    "messaging",
+    "bot-api",
+    "mtproto"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "Telegram",
+    "shortDescription": "Operate and automate Telegram from Codex.",
+    "longDescription": "A multilingual Telegram operations layer for conversations, groups, channels, files, content pipelines, aliases, per-target policies, Bot API, MTProto, Telegram Web, and Telegram Desktop.",
+    "developerName": "Aria Hustler",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write",
+      "Automation"
+    ],
+    "defaultPrompt": [
+      "Summarize my Telegram inbox and draft replies.",
+      "Create and queue a multilingual channel post.",
+      "Configure an automation policy for a Telegram chat."
+    ],
+    "brandColor": "#229ED9",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg"
+  }
+}
+
