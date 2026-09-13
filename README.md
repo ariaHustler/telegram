@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.8 seconds
-Output:
 # Telegram Plugin for Codex
 
 A local Codex plugin for multilingual Telegram operations, content automation,
@@ -65,4 +62,3 @@ Persian documentation is available in [docs/README.fa.md](docs/README.fa.md).
 ## License
 
 Copyright (c) 2026 Aria Hustler. All rights reserved. See [LICENSE](LICENSE).
-
