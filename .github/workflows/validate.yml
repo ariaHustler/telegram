@@ -1,0 +1,70 @@
+Exit code: 0
+Wall time: 0.9 seconds
+Output:
+name: Validate plugin
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation dependencies
+        run: python -m pip install PyYAML
+      - name: Compile MCP server
+        run: python -m py_compile scripts/telegram_mcp.py
+      - name: Check plugin structure
+        shell: pwsh
+        run: |
+          $manifest = Get-Content -Raw .codex-plugin/plugin.json | ConvertFrom-Json
+          if ($manifest.name -ne "telegram") { throw "Unexpected plugin name" }
+          if (-not (Test-Path .mcp.json)) { throw "Missing MCP manifest" }
+          Get-ChildItem skills -Directory | ForEach-Object {
+            $text = Get-Content -Raw (Join-Path $_.FullName "SKILL.md")
+            if ($text -match "\[TODO:") { throw "TODO placeholder in $($_.Name)" }
+            if ($text -notmatch "(?s)^---\s+name:\s+[a-z0-9-]+\s+description:\s+.+?\s+---") { throw "Invalid skill frontmatter: $($_.Name)" }
+          }
+      - name: MCP protocol and dry-run tests
+        shell: pwsh
+        run: |
+          $env:TELEGRAM_PLUGIN_DATA_DIR = Join-Path $env:RUNNER_TEMP "telegram-plugin-test"
+          $messages = @(
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}',
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}',
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"telegram_send","arguments":{"target":"@ci","body":"dry run","transport":"bot","dry_run":true}}}'
+          )
+          $output = $messages | python scripts/telegram_mcp.py
+          if ($LASTEXITCODE -ne 0) { throw "MCP server failed" }
+          if (($output -join "`n") -notmatch '"dry_run":true') { throw "Dry-run response missing" }
+      - name: Reject credential and session artifacts
+        shell: pwsh
+        run: |
+          $forbiddenNames = Get-ChildItem -Recurse -Force -File | Where-Object {
+            $_.Name -match '\.(session|session-journal|db|sqlite|sqlite3)$' -or
+            $_.Name -eq '.env'
+          }
+          if ($forbiddenNames) { throw "Forbidden local artifact found: $($forbiddenNames.FullName -join ', ')" }
+          $files = Get-ChildItem -Recurse -Force -File | Where-Object {
+            $_.FullName -notmatch '\\.git\\' -and $_.Extension -in '.py','.md','.json','.yml','.yaml','.txt','.example'
+          }
+          $patterns = @(
+            '\b[0-9]{8,10}:[A-Za-z0-9_-]{30,}\b',
+            '(?i)api_hash\s*[:=]\s*["''][0-9a-f]{32}["'']',
+            '(?i)phone\s*[:=]\s*["'']?\+[0-9]{8,15}'
+          )
+          foreach ($file in $files) {
+            $content = Get-Content -Raw $file.FullName
+            foreach ($pattern in $patterns) {
+              if ($content -match $pattern) { throw "Potential credential in $($file.FullName)" }
+            }
+          }
+
