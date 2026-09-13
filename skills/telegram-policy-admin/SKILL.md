@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1 seconds
-Output:
 ---
 name: telegram-policy-admin
 description: Configure and inspect Telegram plugin aliases, destinations, automation permissions, dry-run behavior, browser priority, Bot API and MTProto environment-variable bindings, audit records, and local data settings. Use when setting up Telegram access, changing per-chat safety policy, diagnosing transport readiness, or managing operational configuration.
@@ -38,4 +35,3 @@ Use `telegram_config_set` for `default_surface`, `fallback_surfaces`, `default_l
 Use `telegram_audit_list` to trace MCP operations. A failed send is not safe to retry until the transport response or Telegram UI proves whether the original request created a message. Prefer idempotent queue records and retain message identifiers.
 
 Read [references/configuration.md](references/configuration.md) for storage paths and rollout sequence.
-
