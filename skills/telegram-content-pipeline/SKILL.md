@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.8 seconds
-Output:
 ---
 name: telegram-content-pipeline
 description: Create, transform, schedule, queue, and publish multilingual Telegram channel or group content with text, captions, images, video, audio, documents, and subtitles. Use for editorial calendars, recurring Telegram posts, content repurposing, media preparation, scheduled publication, and post-publication verification.
@@ -32,4 +29,3 @@ Treat queued, typed, uploaded, published, and verified as different states. Mark
 Adapt content to Telegram rather than mechanically copying it. Retain the canonical claim set while changing hook, structure, length, formatting, and media crop for the destination audience. Record source provenance when the content is research-based.
 
 Read [references/content-contract.md](references/content-contract.md) for the package schema and acceptance checks.
-
