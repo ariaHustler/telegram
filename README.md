@@ -23,8 +23,9 @@ per-target policies, Telegram Web, Telegram Desktop, Bot API, and MTProto.
 
 ## Authentication
 
-The plugin reads credentials from protected environment bindings. It never
-requires credentials to be committed to the repository.
+On Windows, the plugin reads credentials from Windows Credential Manager and
+falls back to protected environment bindings. It never requires credentials to
+be committed to the repository or entered into a Codex conversation.
 
 Expected variable names:
 
@@ -40,6 +41,15 @@ Install the optional MTProto dependency:
 ```powershell
 python -m pip install -r scripts/requirements-optional.txt
 ```
+
+Store the BotFather token securely (the prompt hides input):
+
+```powershell
+python scripts/store_credential.py TELEGRAM_BOT_TOKEN
+```
+
+Use `telegram_bot_identity` to validate it, then send `/start` to the bot and
+use `telegram_bot_updates` to discover the private chat ID.
 
 Local state defaults to `%LOCALAPPDATA%\Codex\telegram-plugin` and remains
 outside the plugin repository.
