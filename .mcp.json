@@ -1,0 +1,15 @@
+Exit code: 0
+Wall time: 0.8 seconds
+Output:
+{
+  "mcpServers": {
+    "telegram-local": {
+      "command": "python",
+      "args": ["${PLUGIN_ROOT}/scripts/telegram_mcp.py"],
+      "env": {
+        "TELEGRAM_PLUGIN_DATA_DIR": "${LOCALAPPDATA}/Codex/telegram-plugin"
+      }
+    }
+  }
+}
+
