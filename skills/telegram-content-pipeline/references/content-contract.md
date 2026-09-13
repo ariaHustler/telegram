@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.8 seconds
-Output:
 # Content package contract
 
 Required fields:
@@ -21,4 +18,3 @@ Acceptance checks:
 - RTL/LTR segments render correctly.
 - Media order, crop, duration, audio, subtitles, and caption are correct.
 - API response includes a successful message identifier or the published UI state is visible.
-
