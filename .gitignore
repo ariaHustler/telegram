@@ -1,0 +1,32 @@
+Exit code: 0
+Wall time: 0.9 seconds
+Output:
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.session
+*.session-journal
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local artifacts
+dist/
+build/
+coverage/
+*.log
+
