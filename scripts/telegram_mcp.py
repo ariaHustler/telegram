@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.7 seconds
-Output:
 #!/usr/bin/env python3
 """Local MCP server for Telegram configuration, queues, Bot API, and MTProto."""
 from __future__ import annotations
@@ -286,4 +283,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
