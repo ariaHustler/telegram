@@ -28,6 +28,18 @@ TELEGRAM_PHONE
 `.gitignore` از انتشار حذف می‌شوند. دادهٔ محلی به‌طور پیش‌فرض در مسیر
 `%LOCALAPPDATA%\Codex\telegram-plugin` ذخیره می‌شود.
 
+در Windows، وابستگی‌ها را نصب و توکن BotFather را با ورودی مخفی در Credential
+Manager ذخیره کنید:
+
+```powershell
+python -m pip install -r scripts/requirements-optional.txt
+python scripts/store_credential.py TELEGRAM_BOT_TOKEN
+```
+
+ابزار `telegram_bot_identity` توکن را با `getMe` اعتبارسنجی می‌کند. پس از ارسال
+`/start` در گفت‌وگوی خصوصی ربات، ابزار `telegram_bot_updates` شناسهٔ عددی chat
+را بدون نمایش متن پیام‌ها استخراج می‌کند.
+
 ## نصب وابستگی MTProto
 
 ```powershell
