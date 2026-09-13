@@ -29,6 +29,20 @@ DEFAULT_CONFIG = {
     "api_hash_env": "TELEGRAM_API_HASH",
     "phone_env": "TELEGRAM_PHONE",
 }
+CREDENTIAL_SERVICE = "codex-telegram-plugin"
+
+
+def credential(name: str) -> tuple[str | None, str | None]:
+    """Read a secret from Windows Credential Manager, then fall back to env."""
+    try:
+        import keyring
+        value = keyring.get_password(CREDENTIAL_SERVICE, name)
+        if value:
+            return value, "windows-credential-manager"
+    except (ImportError, RuntimeError):
+        pass
+    value = os.environ.get(name)
+    return (value, "environment") if value else (None, None)
 
 
 def now() -> str:
@@ -110,9 +124,9 @@ async def mtproto_send(target: str, body: str) -> dict[str, Any]:
         from telethon import TelegramClient
     except ImportError as exc:
         raise RuntimeError("MTProto requires: python -m pip install -r scripts/requirements-optional.txt") from exc
-    api_id = os.environ.get(str(DEFAULT_CONFIG["api_id_env"]))
-    api_hash = os.environ.get(str(DEFAULT_CONFIG["api_hash_env"]))
-    phone = os.environ.get(str(DEFAULT_CONFIG["phone_env"]))
+    api_id, _ = credential(str(DEFAULT_CONFIG["api_id_env"]))
+    api_hash, _ = credential(str(DEFAULT_CONFIG["api_hash_env"]))
+    phone, _ = credential(str(DEFAULT_CONFIG["phone_env"]))
     if not api_id or not api_hash:
         raise RuntimeError("TELEGRAM_API_ID and TELEGRAM_API_HASH are required")
     session = str(DATA_DIR / "mtproto-session")
@@ -130,7 +144,7 @@ async def mtproto_send_file(target: str, path: Path, caption: str) -> dict[str, 
         from telethon import TelegramClient
     except ImportError as exc:
         raise RuntimeError("MTProto requires: python -m pip install -r scripts/requirements-optional.txt") from exc
-    api_id = os.environ.get(str(DEFAULT_CONFIG["api_id_env"])); api_hash = os.environ.get(str(DEFAULT_CONFIG["api_hash_env"])); phone = os.environ.get(str(DEFAULT_CONFIG["phone_env"]))
+    api_id, _ = credential(str(DEFAULT_CONFIG["api_id_env"])); api_hash, _ = credential(str(DEFAULT_CONFIG["api_hash_env"])); phone, _ = credential(str(DEFAULT_CONFIG["phone_env"]))
     if not api_id or not api_hash: raise RuntimeError("TELEGRAM_API_ID and TELEGRAM_API_HASH are required")
     client = TelegramClient(str(DATA_DIR / "mtproto-session"), int(api_id), api_hash)
     await client.start(phone=phone)
@@ -150,6 +164,8 @@ def schema(properties: dict, required: list[str] | None = None) -> dict:
 
 TOOLS = [
     {"name": "telegram_status", "description": "Inspect local Telegram plugin configuration and transport readiness without exposing secrets.", "inputSchema": schema({})},
+    {"name": "telegram_bot_identity", "description": "Validate the configured Bot API token with getMe and return the bot's public identity without exposing the token.", "inputSchema": schema({})},
+    {"name": "telegram_bot_updates", "description": "Read recent Bot API updates to discover a private chat ID after the user starts the bot. Message text is excluded by default.", "inputSchema": schema({"limit": {"type": "integer", "minimum": 1, "maximum": 100}, "offset": {"type": ["integer", "null"]}, "include_text": {"type": "boolean"}})},
     {"name": "telegram_config_set", "description": "Set a non-secret plugin preference.", "inputSchema": schema({"key": {"type": "string", "enum": list(DEFAULT_CONFIG)}, "value": {}}, ["key", "value"])},
     {"name": "telegram_alias_upsert", "description": "Create or update a stable alias for a user, group, or channel.", "inputSchema": schema({"alias": {"type": "string"}, "target": {"type": "string"}, "kind": {"type": "string", "enum": ["auto", "user", "group", "channel", "bot"]}}, ["alias", "target"])},
     {"name": "telegram_policy_set", "description": "Set per-target automation permissions.", "inputSchema": schema({"target": {"type": "string"}, "mode": {"type": "string", "enum": ["draft-only", "confirm-send", "auto"]}, "allow_delete": {"type": "boolean"}, "allowed_actions": {"type": "array", "items": {"type": "string"}}}, ["target", "mode"])},
@@ -167,7 +183,28 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
     db = connect()
     if name == "telegram_status":
         config = {row["key"]: json.loads(row["value"]) for row in db.execute("SELECT * FROM settings")}
-        return {"database": str(DB_PATH), "config": config, "bot_ready": bool(os.environ.get(config["bot_token_env"])), "mtproto_ready": bool(os.environ.get(config["api_id_env"]) and os.environ.get(config["api_hash_env"])), "telethon_installed": _module_exists("telethon")}
+        bot_token, bot_source = credential(config["bot_token_env"])
+        api_id, api_id_source = credential(config["api_id_env"])
+        api_hash, api_hash_source = credential(config["api_hash_env"])
+        return {"database": str(DB_PATH), "config": config, "bot_ready": bool(bot_token), "bot_credential_source": bot_source, "mtproto_ready": bool(api_id and api_hash), "mtproto_credential_source": api_id_source if api_id_source == api_hash_source else "mixed", "keyring_installed": _module_exists("keyring"), "telethon_installed": _module_exists("telethon")}
+    if name == "telegram_bot_identity":
+        token, source = credential(str(setting(db, "bot_token_env")))
+        if not token: raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured in Windows Credential Manager or the environment")
+        response = bot_request("getMe", token, {})
+        bot = response.get("result", {})
+        return {"ok": bool(response.get("ok")), "credential_source": source, "bot": {key: bot.get(key) for key in ("id", "is_bot", "first_name", "username", "can_join_groups", "can_read_all_group_messages", "supports_inline_queries") if key in bot}}
+    if name == "telegram_bot_updates":
+        token, source = credential(str(setting(db, "bot_token_env")))
+        if not token: raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured in Windows Credential Manager or the environment")
+        response = bot_request("getUpdates", token, {"limit": args.get("limit", 20), "offset": args.get("offset"), "timeout": 0})
+        items = []
+        for update in response.get("result", []):
+            message = update.get("message") or update.get("edited_message") or update.get("channel_post") or update.get("edited_channel_post") or {}
+            chat = message.get("chat", {})
+            item = {"update_id": update.get("update_id"), "message_id": message.get("message_id"), "chat": {key: chat.get(key) for key in ("id", "type", "title", "username", "first_name", "last_name") if key in chat}}
+            if args.get("include_text") and "text" in message: item["text"] = message["text"]
+            items.append(item)
+        return {"ok": bool(response.get("ok")), "credential_source": source, "updates": items}
     if name == "telegram_config_set":
         db.execute("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", (args["key"], json.dumps(args["value"], ensure_ascii=False))); db.commit()
         return {"ok": True, "key": args["key"], "value": args["value"]}
@@ -216,7 +253,7 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         dry = bool(args.get("dry_run", setting(db, "dry_run"))); request = {"target": target, "path": str(path), "caption": args.get("caption", ""), "media_type": args["media_type"], "transport": transport}
         if dry: result = {"ok": True, "dry_run": True, "request": request, "bytes": path.stat().st_size, "policy": policy}
         elif transport == "bot":
-            token = os.environ.get(str(setting(db, "bot_token_env")))
+            token, _ = credential(str(setting(db, "bot_token_env")))
             if not token: raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
             method, field = {"photo": ("sendPhoto", "photo"), "video": ("sendVideo", "video"), "audio": ("sendAudio", "audio"), "document": ("sendDocument", "document")}[args["media_type"]]
             result = bot_file_request(method, token, {"chat_id": target, "caption": args.get("caption", "")}, field, path)
@@ -234,7 +271,7 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         if dry:
             result = {"ok": True, "dry_run": True, "request": request, "policy": policy}
         elif transport == "bot":
-            token = os.environ.get(str(setting(db, "bot_token_env")))
+            token, _ = credential(str(setting(db, "bot_token_env")))
             if not token: raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
             result = bot_request("sendMessage", token, {"chat_id": target, "text": args["body"], "parse_mode": args.get("parse_mode")})
         elif transport == "mtproto":
