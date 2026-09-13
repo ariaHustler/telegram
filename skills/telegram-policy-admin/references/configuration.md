@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1 seconds
-Output:
 # Configuration and rollout
 
 The MCP server stores SQLite data under `%LOCALAPPDATA%\Codex\telegram-plugin` by default. Override the directory with `TELEGRAM_PLUGIN_DATA_DIR`.
@@ -17,4 +14,3 @@ Rollout sequence:
 8. Inspect the audit trail after the first live operation.
 
 The database contains configuration, aliases, policies, drafts, queues, and audit metadata. It must not contain Bot tokens, API hashes, passwords, cookies, or verification codes.
-
