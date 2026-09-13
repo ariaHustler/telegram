@@ -1,1 +1,2 @@
 telethon>=1.37,<2
+keyring>=25,<26
